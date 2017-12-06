@@ -1,6 +1,7 @@
 //#include "stdafx.h"
 #include "Solver.h"
 #include <tuple>
+#include <iostream>
 
 Solver::Solver()
 {

@@ -12,11 +12,11 @@ class FigureNode
 	
 public:
 	FigureNode() { figure = '7'; }
-	bool add(uint32_t, uint32_t, unsigned char);
+	bool add(int32_t, int32_t, unsigned char);
 	FigureNode* next = nullptr;
 	FigureNode* last = this; //only valid in the head node;
 	unsigned char figureType();
-	uint32_t x = 0, y = 0;//coords on the desk
+	int32_t x = 0, y = 0;//coords on the desk
 	unsigned char color();
 	unsigned char getFigure();
 	void setFigure(unsigned char f) { figure = f; }

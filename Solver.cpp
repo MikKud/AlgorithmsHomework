@@ -1,4 +1,4 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 #include "Solver.h"
 #include <tuple>
 #include <iostream>
@@ -30,26 +30,27 @@ bool Solver::addFigure(uint32_t x, uint32_t y, unsigned char figure) {
 
 }
 
-std::shared_ptr<TMoves> Solver::GenerateAllMoves(unsigned char color, uint32_t Depth)
+std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> Solver::GenerateAllMoves(unsigned char color, uint32_t Depth) //second data n return value zero => only one move - eat king
 {
 	std::shared_ptr<TMoves> move;
+	std::shared_ptr<TMoves> last;
 	if (COLOR(color) == BLACK) {
-		std::shared_ptr<TMoves> last;
 		FigureNode* ptr = blackList;
 		std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> thisAndLast = GenerateMove(ptr);
 		move = std::get<0>(thisAndLast);
 		if (move && FIGURE(move->eatenFigure) == KING)
-			return move;
+			return std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>>(move, std::shared_ptr<TMoves>());
 		last = std::get<1>(thisAndLast);
 		ptr = ptr->next;
 		while (ptr != blackList->last)
 		{
 			std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> thisAndLastLocal = GenerateMove(ptr);
-			if (std::get<0>(thisAndLastLocal)) {
+			if (std::get<0>(thisAndLastLocal)) //check for not empty moves
+			{
 				if (FIGURE(std::get<0>(thisAndLastLocal)->eatenFigure) == KING)
 				{
 					move = std::get<0>(thisAndLastLocal);
-					return move;
+					return std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>>(move, std::shared_ptr<TMoves>());
 				}
 				last->next = std::make_shared<TMoves>(TMoves());
 				*last->next = *std::get<0>(thisAndLastLocal);
@@ -57,26 +58,26 @@ std::shared_ptr<TMoves> Solver::GenerateAllMoves(unsigned char color, uint32_t D
 			}
 			ptr = ptr->next;
 		}
-		if (Depth == 2)
-			last->next = std::make_shared<TMoves>(TMoves(blackList, blackList->x, blackList->y, blackList->x, blackList->y, 0));
+		//if (Depth == 2)
+			//last->next = std::make_shared<TMoves>(TMoves(blackList, blackList->x, blackList->y, blackList->x, blackList->y, 0));
 	}
 	else {
-		std::shared_ptr<TMoves> last;
 		FigureNode* ptr = whiteList;
 		std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> thisAndLast = GenerateMove(ptr);
 		move = std::get<0>(thisAndLast);
 		if (move && FIGURE(move->eatenFigure) == KING)
-			return move;
+			return std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>>(move, std::shared_ptr<TMoves>());
 		last = std::get<1>(thisAndLast);
 		ptr = ptr->next;
 		while (ptr != whiteList->last)
 		{
 			std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> thisAndLastLocal = GenerateMove(ptr);
-			if (std::get<0>(thisAndLastLocal)) {
+			if (std::get<0>(thisAndLastLocal))//check for not empty moves
+			{
 				if (FIGURE(std::get<0>(thisAndLastLocal)->eatenFigure) == KING)
 				{
 					move = std::get<0>(thisAndLastLocal);
-					return move;
+					return std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>>(move, std::shared_ptr<TMoves>());
 				}
 				last->next = std::make_shared<TMoves>(TMoves());
 				*last->next = *std::get<0>(thisAndLastLocal);
@@ -84,10 +85,10 @@ std::shared_ptr<TMoves> Solver::GenerateAllMoves(unsigned char color, uint32_t D
 			}
 			ptr = ptr->next;
 		}
-		if (Depth == 2)
-			last->next = std::make_shared<TMoves>(TMoves(whiteList, whiteList->x, whiteList->y, whiteList->x, whiteList->y, 0));
+		//if (Depth == 2)
+			//last->next = std::make_shared<TMoves>(TMoves(whiteList, whiteList->x, whiteList->y, whiteList->x, whiteList->y, 0));
 	}
-	return move;
+	return std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>>(move, last);
 }
 
 std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> Solver::GenerateMove(FigureNode* fPtr)
@@ -834,11 +835,222 @@ void Solver::UnMakeMove(std::shared_ptr<TMoves> movePtr)
 	}
 }
 
+bool Solver::AttackKing(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	return std::abs(int32_t(whoAtack->x) - x) <= 1 && std::abs(int32_t(whoAtack->y) - y) <= 1;
+}
+
+bool Solver::AttackQueen(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	if (x + y == whoAtack->x + whoAtack->y)
+	{
+		for (int i = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)); ; i = i - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = j + ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+			if (desk[whoAtack->x + i][whoAtack->y + j] && (whoAtack->x + i != x) && (whoAtack->y + j != y))
+				return false;
+			if ((whoAtack->x + i == x) && (whoAtack->y + j == y))
+				return true;
+		}
+	}
+
+	if (x - y == int32_t(whoAtack->x) - int32_t(whoAtack->y))
+	{
+		for (int i = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)); ; i = i - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = j - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+			if (desk[whoAtack->x + i][whoAtack->y + j] && (whoAtack->x + i != x) && (whoAtack->y + j != y))
+				return false;
+			if ((whoAtack->x + i == x) && (whoAtack->y + j == y))
+				return true;
+		}
+	}
+
+	if (whoAtack->x == x)
+	{
+		for (int j = ((y - whoAtack->y) / std::abs(int32_t(whoAtack->y) - y));; j = j + ((y - whoAtack->y) / std::abs(int32_t(whoAtack->y) - y)))
+		{
+			if (desk[whoAtack->x][whoAtack->y + j] && (whoAtack->y + j != y))
+				return false;
+			if ((whoAtack->x == x) && (whoAtack->y + j == y))
+				return true;
+		}
+	}
+
+	if (whoAtack->y == y)
+	{
+		for (int i = ((x - whoAtack->x) / std::abs(int32_t(whoAtack->x) - x));; i = i + ((x - whoAtack->x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+			if (desk[whoAtack->x + i][whoAtack->y] && (whoAtack->x + i != x))
+				return false;
+			if ((whoAtack->x + i == x) && (whoAtack->y == y))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool Solver::AttackRook(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	if (whoAtack->x == x)
+	{
+		for (int j = ((y - whoAtack->y) / std::abs(int32_t(whoAtack->y) - y));; j = j + ((y - whoAtack->y) / std::abs(int32_t(whoAtack->y) - y)))
+		{
+			if (desk[whoAtack->x][whoAtack->y + j] && (whoAtack->y + j != y))
+				return false;
+			if ((whoAtack->x == x) && (whoAtack->y + j == y))
+				return true;
+		}
+	}
+
+	if (whoAtack->y == y)
+	{
+		for (int i = ((x - whoAtack->x) / std::abs(int32_t(whoAtack->x) - x));; i = i + ((x - whoAtack->x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+			if (desk[whoAtack->x + i][whoAtack->y] && (whoAtack->x + i != x))
+				return false;
+			if ((whoAtack->x + i == x) && (whoAtack->y == y))
+				return true;
+		}
+	}
+	return false;
+}
+
+bool Solver::AttackBishop(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	if (x + y == whoAtack->x + whoAtack->y)
+	{
+		for (int i = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)); ; i = i - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = j + ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+				if (desk[whoAtack->x + i][whoAtack->y + j] && (whoAtack->x + i != x) && (whoAtack->y + j != y))
+					return false;
+				if ((whoAtack->x + i == x) && (whoAtack->y + j == y))
+					return true;
+		}
+	}
+
+	if (x - y == int32_t(whoAtack->x) - int32_t(whoAtack->y))
+	{
+		for (int i = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)),  j = -((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)); ; i = i - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)), j = j - ((whoAtack->x - x) / std::abs(int32_t(whoAtack->x) - x)))
+		{
+				if (desk[whoAtack->x + i][whoAtack->y + j] && (whoAtack->x + i != x) && (whoAtack->y + j != y))
+					return false;
+				if ((whoAtack->x + i == x) && (whoAtack->y + j == y))
+					return true;
+		}
+	}
+	return false;
+}
+
+bool Solver::AttackKnight(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	if ((std::abs(int32_t(whoAtack->x) - x) == 2 && std::abs(int32_t(whoAtack->y) - y) == 1) || (std::abs(int32_t(whoAtack->x) - x) == 1 && std::abs(int32_t(whoAtack->y) - y) == 2))
+		return true;
+	return false;
+}
+
+bool Solver::AttackPawn(FigureNode* whoAtack, int32_t x, int32_t y)
+{
+	if (whoAtack->x == x && whoAtack->y == y)
+		return false;
+	if (COLOR(whoAtack->color()) == BLACK)
+	{
+		return (std::abs(int32_t(whoAtack->x) - x) == 1 && int32_t(whoAtack->y) - y == 1);
+	}
+	else
+	{
+		return (std::abs(int32_t(whoAtack->x) - x) == 1 && int32_t(whoAtack->y) - y == -1);
+	}
+}
+
+
+bool Solver::underAttack(FigureNode* whoAtack, int32_t x, int32_t y) // possible to optimise
+{
+	auto last = whoAtack->last;
+	bool result = false;
+	while (whoAtack!=last && !result) {
+		if (whoAtack->getFigure() == desk[whoAtack->x][whoAtack->y])
+		{
+			switch (whoAtack->figureType())
+			{
+			case KING:
+				result = result || AttackKing(whoAtack, x, y);
+				break;
+			case QUEEN:
+				result = result || AttackQueen(whoAtack, x, y);
+				break;
+			case ROOK:
+				result = result || AttackRook(whoAtack, x, y);
+				break;
+			case BISHOP:
+				result = result || AttackBishop(whoAtack, x, y);
+				break;
+			case KNIGHT:
+				result = result || AttackKnight(whoAtack, x, y);
+				break;
+			case PAWN:
+				result = result || AttackPawn(whoAtack, x, y);
+				break;
+			default:
+				break;
+			}
+		}
+		whoAtack = whoAtack->next;
+	}
+	return result;
+}
+
+bool Solver::Stalemate(uint32_t color, std::shared_ptr<TMoves>& move)
+{
+	auto temp = move;
+	if (COLOR(color) == BLACK)
+	{
+		if (underAttack(whiteList, move->xFrom, move->yFrom))
+			return false;
+		bool result = true;
+		while (result && temp)
+		{
+			//MakeMove(temp);
+			result = result && underAttack(whiteList, temp->xTo, temp->yTo);
+			//UnMakeMove(temp);
+			temp = temp->next;
+
+		}
+		return result;
+	}
+	else
+	{
+		if (underAttack(blackList, move->xFrom, move->yFrom))
+			return false;
+		bool result = true;
+		while (result && temp)
+		{
+			result = result && underAttack(blackList, temp->xTo, temp->yTo);
+			temp = temp->next;
+		}
+		return result;
+
+	}
+}
+
 int32_t Solver::AlphaBeta(uint32_t color, int32_t Depth, int32_t alpha, int32_t beta, std::shared_ptr<MadeMoves>& tree)
 {
 	if (!Depth)
 		return Evaluate(color, Depth);
-	std::shared_ptr<TMoves> move = GenerateAllMoves(color, Depth);
+	auto tuple = GenerateAllMoves(color, Depth);
+	std::shared_ptr<TMoves> move = std::get<0>(tuple);
+	std::shared_ptr<TMoves> last = std::get<1>(tuple);
+	if((move->figureInTheList->figureType()==KING) &&last && (last->figureInTheList->figureType()==KING))
+		if(Stalemate(color, move))
+			return -MATE + this->depth + 1;
 	while (move && alpha < beta)
 	{
 		int32_t tmp = 0;
@@ -906,23 +1118,43 @@ int32_t Solver::Evaluate(uint32_t color, int32_t Depth)
 void Solver::printResult(std::ostream& os)
 {
 	std::vector<std::shared_ptr<MadeMoves>> result;
-	recursivePrint(head, result, os);
+	std::vector<std::shared_ptr<MadeMoves>> temp;
+	recursivePrint(head, result, temp, os);
 
 }
 
-void Solver::recursivePrint(std::shared_ptr<MadeMoves> head, std::vector<std::shared_ptr<MadeMoves>>& result, std::ostream& os)
+void Solver::recursivePrint(std::shared_ptr<MadeMoves> head, std::vector<std::shared_ptr<MadeMoves>>& result, std::vector<std::shared_ptr<MadeMoves>>& temp, std::ostream& os)
 {
+	
 	while (head)
 	{
 		
 		result.push_back(head);
 		head = head->child;
 	}
-	for (auto i : result)
-	{
-		os << i->stringify() << std::endl;
+	if (result.size() == this->depth) {
+		bool match = true;
+		if (temp.size() == result.size()) {
+			for (int32_t i = 0; i < result.size() - 2; i++)
+			{
+				
+				if (result[i] != temp[i])
+					match = false;
+			}
+		}
+		else
+		{
+			match = false;
+		}
+		if (!match) {
+			for (int32_t i = 0; i < result.size() - 2; i++)
+			{
+				os << result[i]->stringify() << std::endl;
+			}
+			os << std::endl;
+		}
 	}
-	os  << std::endl;
+	temp = result;
 	while (true&& !result.empty())
 	{
 		result.pop_back();
@@ -931,7 +1163,7 @@ void Solver::recursivePrint(std::shared_ptr<MadeMoves> head, std::vector<std::sh
 		if (result[result.size() - 1]->next)
 		{
 			result[result.size() - 1] = result[result.size() - 1]->next;
-			recursivePrint(result[result.size() - 1]->child, result, os);
+			recursivePrint(result[result.size() - 1]->child, result,temp, os);
 		}
 	}
 }

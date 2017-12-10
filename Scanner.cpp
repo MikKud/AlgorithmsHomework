@@ -1,4 +1,4 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 #include "Scanner.h"
 
 
@@ -36,7 +36,7 @@ bool Scanner::scan(Solver& solv, std::ostream& os/*cout*/, std::istream& is/*fil
 	char COLOR = WHITE;
 	uint32_t x = 0, y = 0;//coords
 	char figure;
-	while (true) {//ASCII encoding for letters
+	while (true) {//asci encoding for letters
 		if (!is.good())
 		{
 			os << "You entered something wrong, error occured on entering, probably forgot new line in the end of the file " << std::endl;

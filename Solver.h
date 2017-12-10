@@ -27,7 +27,7 @@ private:
 	FigureNode* blackList = new FigureNode;
 	void MakeMove(std::shared_ptr<TMoves>);
 	void UnMakeMove(std::shared_ptr<TMoves>);
-	std::shared_ptr<TMoves> GenerateAllMoves(unsigned char, uint32_t);
+	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateAllMoves(unsigned char, uint32_t);
 	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateMove(FigureNode*);
 	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateMoveKing(FigureNode*);
 	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateMoveQueen(FigureNode* fPtr);
@@ -36,9 +36,17 @@ private:
 	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateMoveKnight(FigureNode* fPtr);
 	std::tuple<std::shared_ptr<TMoves>, std::shared_ptr<TMoves>> GenerateMovePawn(FigureNode* fPtr);
 	int32_t Evaluate(uint32_t, int32_t);
-	void recursivePrint(std::shared_ptr<MadeMoves>, std::vector<std::shared_ptr<MadeMoves>>&, std::ostream&);
+	void recursivePrint(std::shared_ptr<MadeMoves>, std::vector<std::shared_ptr<MadeMoves>>&, std::vector<std::shared_ptr<MadeMoves>>&, std::ostream&);
 	void Apply(std::shared_ptr<TMoves> move, std::shared_ptr<MadeMoves>& tree);
 	void updateMadeMoves(std::shared_ptr<MadeMoves>& tree);
 	void cleanList(FigureNode*);
+	bool Stalemate(uint32_t, std::shared_ptr<TMoves>&);
+	bool underAttack(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackKing(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackQueen(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackRook(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackBishop(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackKnight(FigureNode* whoAtack, int32_t x, int32_t y);
+	bool AttackPawn(FigureNode* whoAtack, int32_t x, int32_t y);
 };
 

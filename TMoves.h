@@ -16,7 +16,7 @@ public:
 	FigureNode* figureInTheList = nullptr;
 	int32_t xFrom = 0, yFrom = 0;
 	int32_t xTo = 0, yTo = 0;
-	char eatenFigure = 0;
-	char change = 0;
+	unsigned char eatenFigure = 0;
+	unsigned char change = 0;
 };
 

@@ -1,12 +1,13 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 #include "MadeMoves.h"
 
 
 std::string MadeMoves::stringify()
 {
 	std::string result;
-	//x = c - 97;
-	//y = c - 49;
+	
+	//97 - code for 'a'
+	//49 - code for '1'
 	result.push_back(x1 + 97);
 	result.push_back(y1 + 49);
 	result.push_back(' ');
@@ -28,7 +29,8 @@ std::string MadeMoves::stringify()
 		result.push_back('b');
 		break;
 	case(KNIGHT):
-		result.push_back('kn');
+		result.push_back('k');
+		result.push_back('n');
 		break;
 	case(PAWN):
 		result.push_back('p');

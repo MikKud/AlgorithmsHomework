@@ -1,6 +1,6 @@
 // ChessV12.cpp: определяет точку входа для консольного приложения.
 //
-//#include "stdafx.h"
+#include "stdafx.h"
 #include "PreStartTuner.h"
 #include <iostream>
 
@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
 		std::cout << "There is no solution" << std::endl;
 		return 0;
 	}
-	solv.printResult(std::cout);*/
-
+	solv.printResult(std::cout);
+	*/
 	return 0;
 }
 

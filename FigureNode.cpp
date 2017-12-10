@@ -1,9 +1,9 @@
-//#include "stdafx.h"
+#include "stdafx.h"
 #include "FigureNode.h"
 #include "Definitions.h"
 
 
-bool FigureNode::add(uint32_t _x, uint32_t _y, unsigned char _figure) {
+bool FigureNode::add(int32_t _x, int32_t _y, unsigned char _figure) {
 	if (FIGURE(last->figure) < FIGURE(_figure))//figures must go down on their value
 		return false;
 	last->x = _x;
